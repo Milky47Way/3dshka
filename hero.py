@@ -20,7 +20,7 @@ class Hero():
     def __init__(self, pos, land):
         self.land = land
         self.mode = True #крізь усе
-        self.hero = loader.loadMode('smiley') #hero.egg + texture
+        self.hero = loader.loadModel('panda') #hero.egg + texture
         self.hero.setColor(1, 0.5, 0)
         self.hero.setColor(0.3)
         self.hero.setPos(pos)
@@ -32,13 +32,13 @@ class Hero():
     def cameraBind(self):
         base.disableMouse()
         base.camera.setH(180)
-        base.camera.reparenTo(self.hero)
+        base.camera.reparentTo(self.hero)
         base.camera.setPos(0, 0, 1.5)
         self.cameraOn = True
 
     def cameraUp(self):
         x, y, z = self.hero.getPos()
-        base.mouseInterfaceNode.setPos(-x, -y, -z, -3)
+        base.mouseInterfaceNode.setPos(-x, -y, -z -3)
         base.camera.reparentTo(render)
         base.enableMouse()
         self.cameraOn = False
@@ -52,6 +52,10 @@ class Hero():
 
     def turn_left(self):
         self.hero.setH((self.hero.getH() +5) % 360)
+
+    def turn_right(self):
+        """Поворот героя вправо (зміна кута погляду проти годинникової стрілки)."""
+        self.hero.setH((self.hero.getH() - 5) % 360)
 
     def look_at(self, angle): #розраховує в який напрямок треба рухатись, координати
         x_from = self.hero.getX()
@@ -75,7 +79,7 @@ class Hero():
 
         x_from = self.hero.getX()
         y_from = self.hero.getY()
-        z_from = self.hero.getz()
+        z_from = self.hero.getZ()
         dx, dy = self.check_dir(angle)
         x_to = x_from + dx
         y_to = y_from + dy
@@ -142,6 +146,31 @@ class Hero():
             new_pos = (x, y, z - step)
             self.hero.setPos(new_pos)
 
+    def switch_mode(self):
+        if self.mode:
+            self.mode = False
+            print("Тепер неможна проходити крізь перешкоди")
+        else:
+            self.mode = True
+            print("Тепер можна проходити крізь перешкоди")
+
+    def build(self):
+        angle = self.hero.getH() % 360
+        pos = self.look_at(angle)
+        if self.mode:
+            self.land.addBlock(pos)
+        else:
+            self.land.buildBlock(pos)
+
+    def destroy(self):
+        angle = self.hero.getH() % 360
+        pos = self.look_at(angle)
+        if self.mode:
+            self.land.delBlock(pos)
+        else:
+            self.land.delBlockFrom(pos)
+
+
     def accept_events (self):
         base.accept(key_turn_left, self.turn_left)
         base.accept(key_turn_left + '-repeat', self.turn_left)
@@ -169,3 +198,4 @@ class Hero():
 
         base.accept('k', self.land.saveMap)
         base.accept('l', self.land.loadMap)
+
